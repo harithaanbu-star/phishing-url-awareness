@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EWB Phishing URL Awareness Checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --danger: #f85149;
+      --warning: #d29922;
+      --success: #3fb950;
+      --code-bg: #0b0f14;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 760px;
+    }
+    header {
+      margin-bottom: 28px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      border: 1px solid rgba(88, 166, 255, 0.3);
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    .input-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: block;
+      margin-bottom: 8px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    input[type="text"] {
+      flex: 1;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #ffffff;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+    button.btn-check {
+      background: #238636;
+      color: #ffffff;
+      border: 1px solid rgba(240, 246, 252, 0.1);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button.btn-check:hover {
+      background: #2ea043;
+    }
+    .quick-samples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .quick-samples span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .sample-pill {
+      background: #21262d;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: 'Fira Code', monospace;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sample-pill:hover {
+      background: #30363d;
+      border-color: var(--accent);
+    }
+    .result-container {
+      display: none;
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+    .terminal-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .term-header {
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 8px;
+      font-size: 12px;
+    }
+    .flag-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .flag-bullet {
+      color: var(--danger);
+    }
+    .flag-item.safe .flag-bullet {
+      color: var(--success);
+    }
+    .summary-alert {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .summary-alert.danger {
+      background: rgba(248, 81, 73, 0.15);
+      border: 1px solid var(--danger);
+      color: #ff7b72;
+    }
+    .summary-alert.safe {
+      background: rgba(63, 185, 80, 0.15);
+      border: 1px solid var(--success);
+      color: #56d364;
+    }
+    .footer-reminder {
+      margin-top: 14px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-style: italic;
+    }
+    .info-footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .info-footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .info-footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">Defensive Cybersecurity Tool</div>
+      <h1>Phishing URL Awareness Checker</h1>
+      <p class="subtitle">Heuristic static text inspection for visible URL warning signs & deception indicators</p>
+    </header>
+
+    <div class="card">
+      <label class="input-label" for="urlInput">Enter URL string to inspect:</label>
+      <div class="input-group">
+        <input type="text" id="urlInput" placeholder="e.g. http://192.0.2.10/account" spellcheck="false" autocomplete="off">
+        <button class="btn-check" onclick="runCheck()">Inspect URL</button>
+      </div>
+
+      <div class="quick-samples">
+        <span>Test Samples:</span>
+        <button class="sample-pill" onclick="fillAndCheck('https://www.example.com/login')">Benign Example</button>
+        <button class="sample-pill" onclick="fillAndCheck('http://192.0.2.10/account')">Raw IP + HTTP</button>
+        <button class="sample-pill" onclick="fillAndCheck('http://example.com@sample.invalid/login')">@ Masking</button>
+        <button class="sample-pill" onclick="fillAndCheck('https://a.b.c.d.e.example.invalid/path')">Deep Subdomains</button>
+        <button class="sample-pill" onclick="fillAndCheck('https://xn--example.invalid/')">Punycode</button>
+        <button class="sample-pill" onclick="fillAndCheck('http://[bad')">Malformed</button>
+      </div>
+
+      <div class="result-container" id="resultContainer">
+        <div class="terminal-box">
+          <div class="term-header">
+            EWB Phishing URL Awareness Checker | Static Analysis Engine
+          </div>
+          <div id="findingsList"></div>
+          <div id="summaryBox"></div>
+          <div class="footer-reminder">
+            ⚠️ Reminder: Never enter passwords or credentials from unexpected links.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-footer">
+      <p>Built for the <strong>EWB Cybersecurity Internship</strong> by <strong>Haritha A</strong></p>
+      <p>Source Code & Test Reports on GitHub: <a href="https://github.com/harithaanbu-star/phishing-url-awareness" target="_blank">harithaanbu-star/phishing-url-awareness</a></p>
+      <p style="margin-top: 8px; font-size: 11px;">⚠️ <em>Educational awareness tool only. Operates purely offline via static string checks. Does not contact remote servers or scan malware.</em></p>
+    </div>
+  </div>
+
+  <script>
+    function inspectUrl(rawUrl) {
+      const url = rawUrl.trim();
+      const findings = [];
+
+      if (!url) {
+        return { isInfo: true, findings: ["No URL entered."] };
+      }
+
+      const candidate = url.includes("://") ? url : "http://" + url;
+      let parsed;
+
+      try {
+        parsed = new URL(candidate);
+      } catch (e) {
+        return { isInfo: true, findings: ["This text is not a valid URL format."] };
+      }
+
+      const host = (parsed.hostname || "").toLowerCase();
+      if (!host) {
+        return { isInfo: true, findings: ["Could not identify a hostname."] };
+      }
+
+      // Check 1: Presence of @ symbol
+      if (candidate.includes("@")) {
+        findings.append ? findings.append : findings.push("Contains an @ symbol; inspect carefully.");
+      }
+
+      // Check 2: Length over 100 characters
+      if (url.length > 100) {
+        findings.push("Unusually long URL (over 100 characters).");
+      }
+
+      // Check 3: Raw IPv4 address as hostname
+      const ipRegex = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+      if (ipRegex.test(host)) {
+        findings.push("Uses an IP address instead of a familiar domain.");
+      }
+
+      // Check 4: 5 or more hostname segments / subdomains
+      const labels = host.split(".").filter(Boolean);
+      if (labels.length >= 5) {
+        findings.push("Contains many hostname segments/subdomains.");
+      }
+
+      // Check 5: Punycode marker
+      if (host.includes("xn--")) {
+        findings.push("Contains a punycode-style hostname.");
+      }
+
+      // Check 6: Unencrypted HTTP
+      if (parsed.protocol === "http:") {
+        findings.push("Uses HTTP. HTTPS alone does not prove trust.");
+      }
+
+      if (findings.length === 0) {
+        return {
+          isSafeLooking: true,
+          findings: ["No listed warning signs found. This does NOT prove safety."]
+        };
+      }
+
+      return { isWarning: true, findings };
+    }
+
+    function runCheck() {
+      const input = document.getElementById("urlInput").value;
+      const result = inspectUrl(input);
+      const container = document.getElementById("resultContainer");
+      const list = document.getElementById("findingsList");
+      const summary = document.getElementById("summaryBox");
+
+      container.style.display = "block";
+      list.innerHTML = "";
+      summary.innerHTML = "";
+
+      result.findings.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "flag-item" + (result.isSafeLooking ? " safe" : "");
+        div.innerHTML = `<span class="flag-bullet">${result.isSafeLooking ? '✔' : '•'}</span> <span>${item}</span>`;
+        list.appendChild(div);
+      });
+
+      if (result.isWarning) {
+        summary.className = "summary-alert danger";
+        summary.innerHTML = `⚠️ REVIEW CAREFULLY: ${result.findings.length} warning sign(s) detected.`;
+      } else if (result.isSafeLooking) {
+        summary.className = "summary-alert safe";
+        summary.innerHTML = `ℹ️ No listed heuristic anomalies detected. Note: This does not guarantee the destination is safe.`;
+      }
+    }
+
+    function fillAndCheck(sample) {
+      document.getElementById("urlInput").value = sample;
+      runCheck();
+    }
+
+    // Trigger check on Enter
+    document.getElementById("urlInput").addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        runCheck();
+      }
+    });
+  </script>
+</body>
+</html>
